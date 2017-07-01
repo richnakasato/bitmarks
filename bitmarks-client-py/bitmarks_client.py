@@ -6,55 +6,117 @@ import requests
 namespace = "edu.gatech.bitmarks"
 resource = "resource:"+namespace
 bitmarks_api = "http://localhost:3000/api/"
+not_found = 404
 
 # bitmark model definitions
+class_key = "$class"
+
 ## TRANSCRIPT TRANSACTION
-transcript_payload_keys = ["$class", "quantity", "item", "issuer", "learner",
+transcript_payload_keys = [class_key, "quantity", "item", "issuer", "learner",
                            "itemJSON", "issuerJSON", "learnerHash",
                            "issuerTxHashSig", "transactionId", "timestamp"]
 transcript_payload = dict.fromkeys(transcript_payload_keys)
 transcript_class = "AcademicTransaction"
 transcript_namespace_class = namespace+"."+transcript_class
+transcript_payload[class_key] = transcript_namespace_class
 transcript_resource = resource+"."+transcript_class+"#"
 transcript_api = bitmarks_api+transcript_class+"/"
 
 ## ISSUERS
-issuer_payload_keys = ["$class", "issuerId", "name", "country", "url"]
+issuer_payload_keys = [class_key, "issuerId", "name", "country", "url"]
 issuer_payload = dict.fromkeys(issuer_payload_keys)
 issuer_class = "Issuer"
 issuer_namespace_class = namespace+"."+issuer_class
+issuer_payload[class_key] = issuer_namespace_class
 issuer_resource = resource+"."+issuer_class+"#"
 issuer_api = bitmarks_api+issuer_class+"/"
 
 ## LEARNERS
-learner_payload_keys = ["$class", "learnerId", "firstName", "lastName", "salt"]
+learner_payload_keys = [class_key, "learnerId", "firstName", "lastName", "salt"]
 learner_payload = dict.fromkeys(learner_payload_keys)
 learner_class = "Learner"
 learner_namespace_class = namespace+"."+learner_class
+learner_payload[class_key] = learner_namespace_class
 learner_resource = resource+"."+learner_class+"#"
 learner_api = bitmarks_api+learner_class+"/"
 
 ## TRANSCRIPT LINE ITEMS (CREDENTIALS)
-item_payload_keys = ["$class", "itemId", "credential", "units", "comments",
+item_payload_keys = [class_key, "itemId", "credential", "units", "comments",
                      "issuer"]
 item_payload = dict.fromkeys(item_payload_keys)
 item_class = "TranscriptItem"
 item_namespace_class = namespace+"."+item_class
+item_payload[class_key] = item_namespace_class
 item_resource = resource+"."+item_class+"#"
 item_api = bitmarks_api+item_class+"/"
 
-# user client definitions 
+# user client definitions
 client_modes = ["  (i)ssuer", "  (l)earner", "  (s)upport"]
 client_shortcuts = ["i", "l", "s"]
 
 
 def issuerMode():
-    print "entered issuer mode"
+    print "Creating new school..."
+    schoolId = uuid.uuid4()
+    print "Using guid(address): ", schoolId
+    # three modes for a school: 1) create school, 2) create class, 3) transact
+    # 1) create school...
+    # to create, we need a guid, firstname(entered), lastname(entered), salt
+
+    # 2) create class...
+    # to create, we need a guid, firstname(entered), lastname(entered), salt
+
+    # 3) transact...
+    # to create, we need a guid, firstname(entered), lastname(entered), salt
 
 
+# helper function to create a new student based on user input
+def createLearner():
+    print "Creating new student..."
+    i = uuid.uuid4()
+    print "Using guid(address): ", i
+    f = raw_input("Please enter a first name for new student: ")
+    l = raw_input("Please enter a last name for new student: ")
+    s = "asdf"
+    # ensure salt is 4 *digits*
+    while len(s) != 4 or not s.isdigit():
+        s = raw_input("Please enter a 4 digit hash salt value: ")
+    print "\n"
+    return i, f, l, s
+
+
+# helper function to locate a student based on the string of the student guid
+def findLearner(learnerId):
+    locate_this_learner = learner_api+learnerId
+    r = requests.get(locate_this_learner)
+    if r.status_code == not_found:
+        return False
+    return True
+
+
+# handles learner mode functions for the client application
 def learnerMode():
-    print "entered learner mode"
-
+    # two modes for a student: 1) create, 2) search
+    # 1) create...
+    # to create, we need a guid, firstname(entered), lastname(entered), salt
+    sid, first, last, salt = createLearner()
+    print "Creating new student with: ", first, last, salt
+    # check if this guid is in the database
+    studentId_string = str(sid)
+    # no student id found, go ahead and add
+    if not findLearner(studentId_string):
+        print "Not found!  Okay to add..."
+        learner_payload["learnerId"] = sid
+        learner_payload["firstName"] = first
+        learner_payload["lastName"]  = last
+        learner_payload["salt"]      = salt
+        r = requests.post(learner_api, data=learner_payload)
+        print "Added new student, RECORD THESE VALUES: ", sid, salt
+    else:
+        print "Found!  Cannot add new user!  Exiting!"
+        exit()
+    # 2) search...
+    #TODO
 
 def supportMode():
     print "entered support mode"
@@ -75,6 +137,7 @@ def getUserModeSelect():
 # client application main()
 def main():
     user_selection = getUserModeSelect()
+    print "\n"
     # execute appropriate subcall
     if user_selection == client_shortcuts[0]:
         issuerMode()
@@ -88,63 +151,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# select client modes
-client_modes = ["  (i)ssuer", "  (l)earner", "  (s)upport"]
-client_shortcuts = ["i", "l", "s"]
-print "Possible client modes:"
-for mode in client_modes:
-    print mode
-sel_client_mode = raw_input("Enter a client mode: ")
-if sel_client_mode[0] not in client_shortcuts:
-    print "INVALID mode... exiting!"
-    exit()
-
-# execute appropriate subcall
-if sel_client_mode[0] == client_shortcuts[0]:
-    issuerMode()
-elif sel_client_mode[0] == client_shortcuts[1]:
-    learnerMode()
-elif sel_client_mode[0] == client_shortcuts[2]:
-    supportMode()
-else:
-    print "Should not see this!"
-    exit()
-
-# work with clients mode selected
-if sel_client_mode == client_modes[0]:
-    print 'create school mode...'
-    schoolId = uuid.uuid4()
-    print 'using guid(address): ', schoolId
-elif sel_client_mode == client_modes[1]:
-    print 'create student mode...'
-    studentId = uuid.uuid4()
-    print 'using guid(address): ', studentId
-    # two modes for a student: create, search
-    # mode 1) create:
-    # to create, we need a guid, firstname(entered), lastname(entered), salt
-    fName = raw_input('Please enter a first name for new student: ')
-    lName = raw_input('Please enter a last name for new student: ')
-    salt = 'asdf'
-    while len(salt) != 4 or not salt.isdigit():
-        salt = raw_input('Please enter a 4 digit hash salt value: ')
-    print 'creating new student with: ', fName, lName, salt
-    # check if this guid is in the database
-    check_user = bitmarks_url + str(studentId)
-    print 'checking for user: ', check_user
-    r = requests.get(check_user)
-    # no student id found, go ahead and add
-    if r.status_code == 404:
-        print 'not found!  okay to add...'
-        payload = {'$class'     : learner_class,
-                   'learnerId'  : studentId,
-                   'firstName'  : fName,
-                   'lastName'   : lName,
-                   'salt'       : salt}
-        r = requests.post(bitmarks_url, data=payload)
-        print 'added new student, RECORD THESE VALUES: ', studentId, salt
-    else:
-        print 'found!  cannot add new user'
-elif sel_client_mode == client_modes[2]:
-    print 'interviewer mode...'
 
