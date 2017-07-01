@@ -1,6 +1,8 @@
 import sys
 import uuid
 import requests
+import json
+from Crypto.Hash import SHA256
 
 # bitmark connection definitions
 namespace = "edu.gatech.bitmarks"
@@ -54,29 +56,57 @@ item_api = bitmarks_api+item_class+"/"
 client_modes = ["  (i)ssuer", "  (l)earner", "  (s)upport"]
 client_shortcuts = ["i", "l", "s"]
 
+################################################################################
+# FIND FUNCTIONS
+################################################################################
+# helper function to find via api
+def findApi(search_string):
+    r = requests.get(search_string)
+    if r.status_code == not_found:
+        return False
+    return True
 
-def issuerMode():
+
+# helper function to locate an issuer based on the guid string
+def findIssuer(issuerId):
+    locate_this_issuer = issuer_api+issuerId
+    return findApi(locate_this_issuer)
+
+
+# helper function to locate a learner based on the guid string
+def findLearner(learnerId):
+    locate_this_learner = learner_api+learnerId
+    return findApi(locate_this_learner)
+
+
+# helper function to locate a item based on the guid string
+def findItem(itemId):
+    locate_this_item = item_api+itemId
+    return findApi(locate_this_item)
+
+
+################################################################################
+# CREATE FUNCTIONS
+################################################################################
+# helper function to create a new issuer based on user input
+def createIssuer():
     print "Creating new school..."
-    schoolId = uuid.uuid4()
-    print "Using guid(address): ", schoolId
-    # three modes for a school: 1) create school, 2) create class, 3) transact
-    # 1) create school...
-    # to create, we need a guid, firstname(entered), lastname(entered), salt
-
-    # 2) create class...
-    # to create, we need a guid, firstname(entered), lastname(entered), salt
-
-    # 3) transact...
-    # to create, we need a guid, firstname(entered), lastname(entered), salt
+    i = uuid.uuid4()
+    print "Using guid(address): ", i
+    n = raw_input("Please enter a name for the school: ")
+    c = raw_input("Please enter the country where the school is located: ")
+    u = raw_input("Please enter a url for the school: ")
+    print "\n"
+    return i, n, c, u
 
 
-# helper function to create a new student based on user input
+# helper function to create a new learner based on user input
 def createLearner():
     print "Creating new student..."
     i = uuid.uuid4()
     print "Using guid(address): ", i
-    f = raw_input("Please enter a first name for new student: ")
-    l = raw_input("Please enter a last name for new student: ")
+    f = raw_input("Please enter a first name for the student: ")
+    l = raw_input("Please enter a last name for the student: ")
     s = "asdf"
     # ensure salt is 4 *digits*
     while len(s) != 4 or not s.isdigit():
@@ -85,13 +115,160 @@ def createLearner():
     return i, f, l, s
 
 
-# helper function to locate a student based on the string of the student guid
-def findLearner(learnerId):
-    locate_this_learner = learner_api+learnerId
-    r = requests.get(locate_this_learner)
-    if r.status_code == not_found:
-        return False
-    return True
+# helper function to create a new item based on user input
+def createItem():
+    print "Creating new learning record item..."
+    i = uuid.uuid4()
+    print "Using guid(id): ", i
+    n = raw_input("Please enter a name for the learning record item: ")
+    u = raw_input("Please enter the units used for measurement: ")
+    c = raw_input("Please enter any applicable comments: ")
+    print "\n"
+    return i, n, u, c
+
+
+# helper function to create a new transaction based on user input
+def createTransaction():
+    print "Creating new transaction..."
+    q = raw_input("Please the quantity of learning record units: ")
+    print "\n"
+    return q
+
+
+################################################################################
+# HYDRATE PAYLOAD FUNCTIONS
+################################################################################
+# helper function to hydrate issuer payloads
+def hydrateIssuerPayload(sid, name, country, url):
+    issuer_payload["issuerId"]  = sid
+    issuer_payload["name"]      = name
+    issuer_payload["country"]   = country
+    issuer_payload["url"]       = url
+    return issuer_payload
+
+
+# helper function to hydrate learner payloads
+def hydrateLearnerPayload(sid, first, last, salt):
+    learner_payload["learnerId"] = sid
+    learner_payload["firstName"] = first
+    learner_payload["lastName"]  = last
+    learner_payload["salt"]      = salt
+    return learner_payload
+
+
+# helper function to hydrate item payloads
+def hydrateItemPayload(sid, name, unit, comment, issuer):
+    print sid, name, unit, comment, issuer_resource+issuer
+    item_payload["itemId"]      = sid
+    item_payload["credential"]  = name
+    item_payload["units"]       = unit
+    item_payload["comments"]    = comment
+    item_payload["issuer"]      = issuer_resource+issuer
+    return item_payload
+
+
+################################################################################
+# CLIENT MODE HELPER FUNCTIONS
+################################################################################
+# handles learner mode functions for the client application
+def issuerMode():
+    # three modes for a school: 1) create school, 2) create class, 3) transact
+    sel = raw_input("Please enter a mode - create (s)chool, (c)lass, or (t)ransaction: ")
+    print "\n"
+    # 1) school...
+    if sel[0] == "s":
+        # 1) create school...
+        sid, name, country, url = createIssuer()
+        print "Creating new school with: ", name, country, url
+        # check if this guid is in the database
+        id_string = str(sid)
+        if not findIssuer(id_string):
+            print "Not found!  Okay to add..."
+            this_payload = hydrateIssuerPayload(sid, name, country, url)
+            r = requests.post(issuer_api, data=this_payload)
+            print "Added new school, RECORD THIS VALUE: ", sid
+            exit()
+        else:
+            print "Found! Cannot add new school! Exiting!"
+            exit()
+
+    # other options require a valid issuer address
+    issuer = raw_input("Please enter a valid issuer address: ")
+    print "\n"
+    found_issuer = False
+    if findIssuer(issuer):
+        print "Valid issuer!"
+        found_issuer = True
+    else:
+        print "INVALID issuer! Cannot create record without valid issuer"
+        exit()
+
+    # 2) class...
+    if sel[0] == "c" and found_issuer:
+        # 2) create class...
+        sid, name, unit, comment = createItem()
+        print "Creating new learning record with: ", name, unit, comment
+        # check if this guid is in the database
+        id_string = str(sid)
+        if not findItem(id_string):
+            print "Not found!  Okay to add..."
+            this_payload = hydrateItemPayload(sid, name, unit, comment,
+                                              issuer)
+            r = requests.post(item_api, data=this_payload)
+            print "Added new record item!"
+
+    # 3) transact...
+    elif sel[0] == "t" and found_issuer:
+        # we'll want to filter for this later...
+        item = raw_input("Please enter a valid item id: ")
+        print "\n"
+        found_item = False
+        if findItem(item):
+            print "Valid item!"
+            found_item = True
+        else:
+            print "INVALID item! Cannot create record without valid item"
+            exit()
+        learner = raw_input("Please enter a valid learner address: ")
+        print "\n"
+        found_learner = False
+        if findLearner(learner):
+            print "Valid learner!"
+            found_learner = True
+        else:
+            print "INVALID learner! Cannot create record without valid learner"
+            exit()
+        valid_quantity = False
+        if found_item and found_learner:
+            quantity = createTransaction()
+            if is_float(quantity):
+                print "Creating new transaction with: ", quantity
+                valid_quantity = True
+            else:
+                print "INVALID quantity! Cannot create transaction without valid quantity"
+                exit()
+
+        # we have enough to do a transaction here...
+        if valid_quantity:
+            print "start"
+            # first, get json for item
+            item_string = item_api+item
+            r = requests.get(item_string)
+            item_json = json.dumps(r.json())
+            # second, get json for issuer
+            issuer_string = issuer_api+issuer
+            r = requests.get(issuer_string)
+            issuer_json = json.dumps(r.json())
+            # third, get hash for learner...
+            # - first, build learner string to has
+            learner_string = learner_api+learner
+            r = requests.get(learner_string)
+            hash_1 = r.json()['firstName']
+            hash_2 = r.json()['lastName']
+            hash_3 = str(r.json()['salt'])
+            learner_string_to_hash = hash_1 + " " + hash_2 + " " + hash_3
+            learner_hash = SHA256.new(learner_string_to_hash).hexdigest()
+            print "done"
 
 
 # handles learner mode functions for the client application
@@ -100,27 +277,38 @@ def learnerMode():
     # 1) create...
     # to create, we need a guid, firstname(entered), lastname(entered), salt
     sid, first, last, salt = createLearner()
-    print "Creating new student with: ", first, last, salt
+    print "\nCreating new student with: ", first, last, salt
     # check if this guid is in the database
-    studentId_string = str(sid)
+    id_string = str(sid)
     # no student id found, go ahead and add
-    if not findLearner(studentId_string):
+    if not findLearner(id_string):
         print "Not found!  Okay to add..."
-        learner_payload["learnerId"] = sid
-        learner_payload["firstName"] = first
-        learner_payload["lastName"]  = last
-        learner_payload["salt"]      = salt
-        r = requests.post(learner_api, data=learner_payload)
+        this_payload = hydrateLearnerPayload(sid, first, last, salt)
+        r = requests.post(learner_api, data=this_payload)
         print "Added new student, RECORD THESE VALUES: ", sid, salt
     else:
-        print "Found!  Cannot add new user!  Exiting!"
+        print "Found! Cannot add new user! Exiting!"
         exit()
     # 2) search...
     #TODO
 
+
+# handles learner mode functions for the client application
 def supportMode():
     print "entered support mode"
 
+
+################################################################################
+# MISC HELPER FUNCTIONS
+################################################################################
+# checks if a string is a float (for transaction quanities)
+# grabbed from https://stackoverflow.com/questions/354038/how-do-i-check-if-a-string-is-a-number-float-in-python
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 # gets user input
 def getUserModeSelect():
@@ -134,6 +322,10 @@ def getUserModeSelect():
     else:
         return sel_client_mode[0]
 
+
+################################################################################
+# MAIN APPLICATION
+################################################################################
 # client application main()
 def main():
     user_selection = getUserModeSelect()
