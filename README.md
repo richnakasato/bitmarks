@@ -1,2 +1,2 @@
 # bitmarks
-bitmarks hyperledger blockchain client application
+bitmarks hyperledger blockchain project for Education Technology 6460
