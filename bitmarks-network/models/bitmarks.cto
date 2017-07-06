@@ -1,0 +1,35 @@
+/**
+ * bitMarks Academic Transcript Network
+ */
+
+namespace edu.gatech.bitmarks
+
+asset TranscriptItem identified by itemId {
+  o String itemId
+  o String credential
+  o String units
+  o String comments
+  --> Issuer issuer
+}
+
+participant Issuer identified by issuerId {
+  o String issuerId
+  o String name
+  o String country
+  o String url
+}
+
+participant Learner identified by learnerId {
+  o String learnerId
+  o String firstName
+  o String lastName
+  o Integer salt
+}
+
+transaction AcademicTransaction identified by transactionId {
+  o Double quantity
+  o String itemJSON
+  o String issuerJSON
+  o String learnerHash
+  o String issuerTxHashSig
+}

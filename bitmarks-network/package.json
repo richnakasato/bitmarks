@@ -2,11 +2,11 @@
   "engines": {
     "composer": "^0.9.0"
   },
-  "name": "basic-sample-network",
-  "version": "0.1.0",
-  "description": "The Hello World of Hyperledger Composer samples",
+  "name": "bitmarks-network",
+  "version": "0.0.1",
+  "description": "bitMarks Hyperledger Composer Network",
   "scripts": {
-    "prepublish": "mkdirp ./dist && composer archive create --sourceType dir --sourceName . -a ./dist/basic-sample-network.bna",
+    "prepublish": "mkdirp ./dist && composer archive create --sourceType dir --sourceName . -a ./dist/bitmarks-network.bna",
     "pretest": "npm run lint",
     "lint": "eslint .",
     "postlint": "npm run licchk",
@@ -15,7 +15,7 @@
     "doc": "jsdoc --pedantic --recurse -c jsdoc.conf",
     "test-inner": "mocha -t 0 --recursive && cucumber-js",
     "test-cover": "nyc npm run test-inner",
-    "test": "npm run test-inner"
+    "test": "mocha --recursive -t 4000"
   },
   "repository": {
     "type": "git",
