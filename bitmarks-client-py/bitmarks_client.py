@@ -3,8 +3,14 @@ import uuid
 import requests
 import json
 import random
+from base64 import b64encode, b64decode
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+from datetime import datetime
+
+left = None
+right = None
 
 # bitmark connection definitions // {{{
 namespace = "edu.gatech.bitmarks"
@@ -18,9 +24,8 @@ not_found = 404
 class_key = "$class"
 
 ## TRANSCRIPT TRANSACTION
-transcript_payload_keys = [class_key, "quantity", "item", "issuer", "learner",
-                           "itemJSON", "issuerJSON", "learnerHash",
-                           "issuerTxHashSig", "transactionId", "timestamp"]
+transcript_payload_keys = [class_key, "quantity", "itemJSON", "issuerJSON",
+                           "learnerHash", "issuerTxHashSig"]
 transcript_payload = dict.fromkeys(transcript_payload_keys)
 transcript_class = "AcademicTransaction"
 transcript_namespace_class = namespace+"."+transcript_class
@@ -56,6 +61,9 @@ item_payload[class_key] = item_namespace_class
 item_resource = resource+"."+item_class+"#"
 item_api = bitmarks_api+item_class+"/"
 
+## SYSTEM
+transaction_api =bitmarks_api+"system/"+"transactions/"
+
 # user client definitions
 client_modes = ["  (i)ssuer", "  (l)earner", "  (s)upport"]
 client_shortcuts = ["i", "l", "s"]
@@ -64,6 +72,7 @@ client_shortcuts = ["i", "l", "s"]
 ################################################################################
 # CRYPTO FUNCTIONS // {{{
 ################################################################################
+# helper function to generate new RSA private/public keypair
 # derived from https://gist.github.com/lkdocs/6519378
 def generateRsaKeypair(bits=2048):
     new_key = RSA.generate(bits, e=65537)
@@ -72,13 +81,76 @@ def generateRsaKeypair(bits=2048):
     return private_key, public_key
 
 
-# derived from https://www.dlitz.net/software/pycrypto/api/current/Crypto.PublicKey.RSA-module.html 
+# helper function to write RSA keypairs to files
+# derived from https://www.dlitz.net/software/pycrypto/api/current/Crypto.PublicKey.RSA-module.html
 def writeRsaKeysToFile(filename):
     private_key, public_key = generateRsaKeypair()
     f_private = open(filename+"_PRIVATE.pem", 'w')
     f_private.write(private_key)
     f_public = open(filename+"_public.pem", 'w')
     f_public.write(public_key)
+
+
+# both signStringWithRsa and isVerifyStringWithRsa derived from:
+# https://www.dlitz.net/software/pycrypto/api/current/Crypto.Signature.PKCS1_v1_5-module.html
+# helper function to sign hash of string (presumably JSON transaction string)
+def signStringWithRsa(message, private):
+    key = RSA.importKey(open(private, "r").read())
+    signer = PKCS1_v1_5.new(key)
+    digest = SHA256.new(message)
+    signature = signer.sign(digest)
+    return signature
+
+
+# helper function to verify hash of string with public key and signature
+def isVerifyStringWithRsa(message, public, signature):
+    key = RSA.importKey(open(public, "r").read())
+    verifier = PKCS1_v1_5.new(key)
+    digest = SHA256.new(message)
+    if verifier.verify(digest, signature):
+        return True
+    else:
+        return False
+
+
+# helper function to build string of payload values in KNOWN order for signing
+def buildStringToSignFromPayload(payload):
+    payload_dict = json.loads(payload)
+    output = str(payload_dict[class_key]) + " " + \
+             str(payload_dict['quantity']) + " " + \
+             str(payload_dict['itemJSON']).replace("\\","") + " " + \
+             str(payload_dict['issuerJSON']).replace("\\","") + " " + \
+             str(payload_dict['learnerHash'])
+    return output
+
+
+# helper function to build string of payload values from json response
+def buildStringToSignFromResponse(response):
+    payload = json.dumps(response.json(), ensure_ascii=False)
+    return buildStringToSignFromPayload(payload)
+
+
+# helper function to get signature from payload
+def getStringSignatureFromPayload(payload):
+    payload_dict = json.loads(payload)
+    signature = str(payload_dict['issuerTxHashSig'])
+    return signature
+
+
+#helper function to get signature from json response
+def getStringSignatureFromResponse(response):
+    payload = json.dumps(response.json(), ensure_ascii=False)
+    return getStringSignatureFromPayload(payload)
+
+
+# helper function to build learner hash from learner response
+def getLearnerHashFromRespObj(r):
+    hash_1 = r.json()['firstName']
+    hash_2 = r.json()['lastName']
+    hash_3 = str(r.json()['salt'])
+    learner_string_to_hash = hash_1 + " " + hash_2 + " " + hash_3
+    learner_hash = SHA256.new(learner_string_to_hash).hexdigest()
+    return learner_hash
 # // }}}
 
 
@@ -109,6 +181,12 @@ def findLearner(learnerId):
 def findItem(itemId):
     locate_this_item = item_api+itemId
     return findApi(locate_this_item)
+
+
+# helper function locate a transaction based on the guid string
+def findTransaction(transcriptId):
+    locate_this_transaction = transcript_api+transcriptId
+    return findApi(locate_this_transaction)
 # // }}}
 
 
@@ -214,37 +292,77 @@ def fixTransaction(q):
 
 
 ################################################################################
+# JSON/OBJ FUNCTIONS // {{{
+################################################################################
+# helper function to retrieve json for item id
+def getItemJson(item_id):
+    item_string = item_api+item_id
+    r = requests.get(item_string)
+    item_json = json.dumps(r.json())
+    return item_json
+
+
+# helper function to retrieve json for issuer id
+def getIssuerJson(issuer_id):
+    issuer_string = issuer_api+issuer_id
+    r = requests.get(issuer_string)
+    issuer_json = json.dumps(r.json())
+    return issuer_json
+
+
+# helper function to retrieve response obj for learner
+def getLearnerResponseObj(learner_id):
+    learner_string = learner_api+learner_id
+    r = requests.get(learner_string)
+    return r
+# // }}}
+
+
+
+
+################################################################################
 # HYDRATE PAYLOAD FUNCTIONS // {{{
 ################################################################################
 # helper function to hydrate issuer payloads
 def hydrateIssuerPayload(sid, name, country, url):
     sid, name, country, url = fixIssuer(sid, name, country, url)
-    issuer_payload["issuerId"]  = sid
-    issuer_payload["name"]      = name
-    issuer_payload["country"]   = country
-    issuer_payload["url"]       = url
+    issuer_payload['issuerId']  = sid
+    issuer_payload['name']      = name
+    issuer_payload['country']   = country
+    issuer_payload['url']       = url
     return issuer_payload
 
 
 # helper function to hydrate learner payloads
 def hydrateLearnerPayload(sid, first, last, salt):
     sid, first, last, salt = fixLearner(sid, first, last, salt)
-    learner_payload["learnerId"] = sid
-    learner_payload["firstName"] = first
-    learner_payload["lastName"]  = last
-    learner_payload["salt"]      = salt
+    learner_payload['learnerId'] = sid
+    learner_payload['firstName'] = first
+    learner_payload['lastName']  = last
+    learner_payload['salt']      = salt
     return learner_payload
 
 
 # helper function to hydrate item payloads
 def hydrateItemPayload(sid, name, unit, comment, issuer):
     sid, name, unit, comment = fixItem(sid, name, unit, comment)
-    item_payload["itemId"]      = sid
-    item_payload["credential"]  = name
-    item_payload["units"]       = unit
-    item_payload["comments"]    = comment
-    item_payload["issuer"]      = issuer_resource+issuer
+    item_payload['itemId']      = sid
+    item_payload['credential']  = name
+    item_payload['units']       = unit
+    item_payload['comments']    = comment
+    item_payload['issuer']      = issuer_resource+issuer
     return item_payload
+
+
+#helper function to hydrate transaction payload - PRE SIGNATURE
+def hydrateTransactionPayloadPreSig(quantity, item, issuer, learner):
+    quantity = fixTransaction(quantity)
+    transcript_payload['quantity']         = quantity
+    transcript_payload['itemJSON']         = item
+    transcript_payload['issuerJSON']       = issuer
+    transcript_payload['learnerHash']      = learner
+    transcript_payload['issuerTxHashSig']  = ""
+    return transcript_payload
 # // }}}
 
 
@@ -331,25 +449,26 @@ def issuerMode():
 
         # we have enough to do a transaction here...
         if valid_quantity:
-            print "start"
-            # first, get json for item
-            item_string = item_api+item
-            r = requests.get(item_string)
-            item_json = json.dumps(r.json())
-            # second, get json for issuer
-            issuer_string = issuer_api+issuer
-            r = requests.get(issuer_string)
-            issuer_json = json.dumps(r.json())
-            # third, get hash for learner...
-            # - first, build learner string to has
-            learner_string = learner_api+learner
-            r = requests.get(learner_string)
-            hash_1 = r.json()['firstName']
-            hash_2 = r.json()['lastName']
-            hash_3 = str(r.json()['salt'])
-            learner_string_to_hash = hash_1 + " " + hash_2 + " " + hash_3
-            learner_hash = SHA256.new(learner_string_to_hash).hexdigest()
-            print "done"
+            item_json = getItemJson(item)
+            issuer_json = getIssuerJson(issuer)
+            learner_hash = getLearnerHashFromRespObj(getLearnerResponseObj(
+                learner))
+            this_payload = hydrateTransactionPayloadPreSig(quantity,
+                                                           item_json,
+                                                           issuer_json,
+                                                           learner_hash)
+            # sign transaction
+            this_payload_json = json.dumps(this_payload)
+            string_to_sign = buildStringToSignFromPayload(this_payload_json)
+
+# TODO - need to be able to set private key file
+            signature = signStringWithRsa(string_to_sign,
+                                          'test_PRIVATE.pem')
+            this_payload['issuerTxHashSig'] = b64encode(signature)
+            payload_json = json.dumps(this_payload)
+            r = requests.post(transcript_api, data=this_payload)
+            print "Added new transcript transaction!"
+            exit()
 
 
 # handles learner mode functions for the client application
@@ -367,6 +486,7 @@ def learnerMode():
         this_payload = hydrateLearnerPayload(sid, first, last, salt)
         r = requests.post(learner_api, data=this_payload)
         print "Added new student, RECORD THESE VALUES: ", sid, salt
+        exit()
     else:
         print "Found! Cannot add new user! Exiting!"
         exit()
@@ -376,7 +496,23 @@ def learnerMode():
 
 # handles learner mode functions for the client application
 def supportMode():
-    print "entered support mode"
+    # N modes for a support: 1) check , 2) search
+    # 1) chec...
+    # to chec, we need a guid
+    t_id = raw_input("Please enter a valid transaction id: ")
+    t_string = transaction_api+t_id
+    r = requests.get(t_string)
+    message = buildStringToSignFromResponse(r)
+    signature = getStringSignatureFromResponse(r)
+    sig = b64decode(signature)
+    if isVerifyStringWithRsa(message, 'test_public.pem', sig):
+        print "This transaction has a valid signature!"
+        exit()
+    else:
+        print "This transaction has an INVALID signature!"
+        exit()
+    # 2) search...
+    #l_hash = raw_input("Please enter a valid transaction id: ")
 # // }}}
 
 
@@ -391,6 +527,7 @@ def isFloat(s):
         return True
     except ValueError:
         return False
+
 
 # gets user input
 def getUserModeSelect():
@@ -412,9 +549,17 @@ def getUserModeSelect():
 # client application main()
 def main():
 
-    writeRsaKeysToFile('test')
+    #message_valid = 'the cat in the hat is the best cat'
+    #message_invalid = 'teh cat in the hat is the best cat'
+    ##writeRsaKeysToFile('test')
+    #signature = signStringWithRsa(message_valid, 'test_PRIVATE.pem')
+    #print signature
+    #if isVerifyStringWithRsa(message_valid, 'test_public.pem', signature):
+    #    print 'yay!'
+    #else:
+    #    print 'nay!'
+    #exit()
 
-    exit()
     user_selection = getUserModeSelect()
     print "\n"
     # execute appropriate subcall
