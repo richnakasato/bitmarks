@@ -4,6 +4,7 @@ import requests
 import json
 import random
 from Crypto.Hash import SHA256
+from Crypto.PublicKey import RSA
 
 # bitmark connection definitions // {{{
 namespace = "edu.gatech.bitmarks"
@@ -59,6 +60,27 @@ item_api = bitmarks_api+item_class+"/"
 client_modes = ["  (i)ssuer", "  (l)earner", "  (s)upport"]
 client_shortcuts = ["i", "l", "s"]
 # // }}}
+
+################################################################################
+# CRYPTO FUNCTIONS // {{{
+################################################################################
+# derived from https://gist.github.com/lkdocs/6519378
+def generateRsaKeypair(bits=2048):
+    new_key = RSA.generate(bits, e=65537)
+    public_key = new_key.publickey().exportKey("PEM")
+    private_key = new_key.exportKey("PEM")
+    return private_key, public_key
+
+
+# derived from https://www.dlitz.net/software/pycrypto/api/current/Crypto.PublicKey.RSA-module.html 
+def writeRsaKeysToFile(filename):
+    private_key, public_key = generateRsaKeypair()
+    f_private = open(filename+"_PRIVATE.pem", 'w')
+    f_private.write(private_key)
+    f_public = open(filename+"_public.pem", 'w')
+    f_public.write(public_key)
+# // }}}
+
 
 ################################################################################
 # FIND FUNCTIONS // {{{
@@ -300,7 +322,7 @@ def issuerMode():
         valid_quantity = False
         if found_item and found_learner:
             quantity = createTransaction()
-            if is_float(quantity):
+            if isFloat(quantity):
                 print "Creating new transaction with: ", quantity
                 valid_quantity = True
             else:
@@ -363,7 +385,7 @@ def supportMode():
 ################################################################################
 # checks if a string is a float (for transaction quanities)
 # grabbed from https://stackoverflow.com/questions/354038/how-do-i-check-if-a-string-is-a-number-float-in-python
-def is_float(s):
+def isFloat(s):
     try:
         float(s)
         return True
@@ -389,6 +411,10 @@ def getUserModeSelect():
 ################################################################################
 # client application main()
 def main():
+
+    writeRsaKeysToFile('test')
+
+    exit()
     user_selection = getUserModeSelect()
     print "\n"
     # execute appropriate subcall
