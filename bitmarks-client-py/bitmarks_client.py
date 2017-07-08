@@ -2,15 +2,18 @@ import sys
 import uuid
 import requests
 import json
+import random
 from Crypto.Hash import SHA256
 
-# bitmark connection definitions
+# bitmark connection definitions // {{{
 namespace = "edu.gatech.bitmarks"
 resource = "resource:"+namespace
-bitmarks_api = "http://localhost:3000/api/"
+#bitmarks_api = "http://localhost:3000/api/"
+bitmarks_api = "http://ec2-34-212-169-28.us-west-2.compute.amazonaws.com:3000/api/"
 not_found = 404
+# // }}}
 
-# bitmark model definitions
+# bitmark model definitions // {{{
 class_key = "$class"
 
 ## TRANSCRIPT TRANSACTION
@@ -55,9 +58,10 @@ item_api = bitmarks_api+item_class+"/"
 # user client definitions
 client_modes = ["  (i)ssuer", "  (l)earner", "  (s)upport"]
 client_shortcuts = ["i", "l", "s"]
+# // }}}
 
 ################################################################################
-# FIND FUNCTIONS
+# FIND FUNCTIONS // {{{
 ################################################################################
 # helper function to find via api
 def findApi(search_string):
@@ -83,10 +87,11 @@ def findLearner(learnerId):
 def findItem(itemId):
     locate_this_item = item_api+itemId
     return findApi(locate_this_item)
+# // }}}
 
 
 ################################################################################
-# CREATE FUNCTIONS
+# CREATE FUNCTIONS // {{{
 ################################################################################
 # helper function to create a new issuer based on user input
 def createIssuer():
@@ -133,13 +138,65 @@ def createTransaction():
     q = raw_input("Please the quantity of learning record units: ")
     print "\n"
     return q
+# // }}}
 
 
 ################################################################################
-# HYDRATE PAYLOAD FUNCTIONS
+# FIXING FUNCTIONS // {{{
+################################################################################
+# helper function to ensure issuer fields are populated
+def fixIssuer(i, n, c, u):
+    if not i:
+        i = uuid.uuid4()
+    if not n:
+        n = "default school name"
+    if not c:
+        c = "default school country"
+    if not u:
+        u = "default school url"
+    return i, n, c, u
+
+
+# helper function to ensure learner fields are populated
+def fixLearner(i, f, l, s):
+    if not i:
+        i = uuid.uuid4()
+    if not f:
+        f = "default first name"
+    if not l:
+        l = "default last name"
+    if not s:
+        s = '{0:04}'.format(random.randint(1,10000))
+    return i, f, l, s
+
+
+# helper function to ensure item fields are populated
+def fixItem(i, n, u, c):
+    if not i:
+        i = uuid.uuid4()
+    if not n:
+        n = "default record name"
+    if not u:
+        u = "default units"
+    if not c:
+        c = "no comments"
+    return i, n, u, c
+
+
+# helper function to ensure transaction fields are populated
+def fixTransaction(q):
+    if not q:
+        q = "0";
+    return q
+# // }}}
+
+
+################################################################################
+# HYDRATE PAYLOAD FUNCTIONS // {{{
 ################################################################################
 # helper function to hydrate issuer payloads
 def hydrateIssuerPayload(sid, name, country, url):
+    sid, name, country, url = fixIssuer(sid, name, country, url)
     issuer_payload["issuerId"]  = sid
     issuer_payload["name"]      = name
     issuer_payload["country"]   = country
@@ -149,6 +206,7 @@ def hydrateIssuerPayload(sid, name, country, url):
 
 # helper function to hydrate learner payloads
 def hydrateLearnerPayload(sid, first, last, salt):
+    sid, first, last, salt = fixLearner(sid, first, last, salt)
     learner_payload["learnerId"] = sid
     learner_payload["firstName"] = first
     learner_payload["lastName"]  = last
@@ -158,17 +216,18 @@ def hydrateLearnerPayload(sid, first, last, salt):
 
 # helper function to hydrate item payloads
 def hydrateItemPayload(sid, name, unit, comment, issuer):
-    print sid, name, unit, comment, issuer_resource+issuer
+    sid, name, unit, comment = fixItem(sid, name, unit, comment)
     item_payload["itemId"]      = sid
     item_payload["credential"]  = name
     item_payload["units"]       = unit
     item_payload["comments"]    = comment
     item_payload["issuer"]      = issuer_resource+issuer
     return item_payload
+# // }}}
 
 
 ################################################################################
-# CLIENT MODE HELPER FUNCTIONS
+# CLIENT MODE HELPER FUNCTIONS // {{{
 ################################################################################
 # handles learner mode functions for the client application
 def issuerMode():
@@ -296,10 +355,11 @@ def learnerMode():
 # handles learner mode functions for the client application
 def supportMode():
     print "entered support mode"
+# // }}}
 
 
 ################################################################################
-# MISC HELPER FUNCTIONS
+# MISC HELPER FUNCTIONS // {{{
 ################################################################################
 # checks if a string is a float (for transaction quanities)
 # grabbed from https://stackoverflow.com/questions/354038/how-do-i-check-if-a-string-is-a-number-float-in-python
@@ -321,10 +381,11 @@ def getUserModeSelect():
         return None
     else:
         return sel_client_mode[0]
+# // }}}
 
 
 ################################################################################
-# MAIN APPLICATION
+# MAIN APPLICATION // {{{
 ################################################################################
 # client application main()
 def main():
@@ -343,4 +404,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+# // }}}
