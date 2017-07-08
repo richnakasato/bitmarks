@@ -499,20 +499,40 @@ def supportMode():
     # N modes for a support: 1) check , 2) search
     # 1) chec...
     # to chec, we need a guid
-    t_id = raw_input("Please enter a valid transaction id: ")
-    t_string = transaction_api+t_id
-    r = requests.get(t_string)
-    message = buildStringToSignFromResponse(r)
-    signature = getStringSignatureFromResponse(r)
-    sig = b64decode(signature)
-    if isVerifyStringWithRsa(message, 'test_public.pem', sig):
-        print "This transaction has a valid signature!"
-        exit()
-    else:
-        print "This transaction has an INVALID signature!"
-        exit()
+    #t_id = raw_input("Please enter a valid transaction id: ")
+    #t_string = transaction_api+t_id
+    #r = requests.get(t_string)
+    #message = buildStringToSignFromResponse(r)
+    #signature = getStringSignatureFromResponse(r)
+    #sig = b64decode(signature)
+    #if isVerifyStringWithRsa(message, 'test_public.pem', sig):
+    #    print "This transaction has a valid signature!"
+    #    #exit()
+    #else:
+    #    print "This transaction has an INVALID signature!"
+    #    #exit()
     # 2) search...
-    #l_hash = raw_input("Please enter a valid transaction id: ")
+    l_id = raw_input("Please enter a valid learner id: ")
+    l_hash = getLearnerHashFromRespObj(getLearnerResponseObj(l_id))
+    r = requests.get(transaction_api)
+    complete_transaction_list = json.loads(r.text)
+    learner_transaction_list = []
+    for transaction in complete_transaction_list:
+        if transaction['learnerHash'] == l_hash:
+            learner_transaction_list.append(transaction)
+    # only print valid transactions
+    for transaction in learner_transaction_list:
+        t_id = transaction['transactionId']
+        t_string = transaction_api+t_id
+        r = requests.get(t_string)
+        message = buildStringToSignFromResponse(r)
+        signature = getStringSignatureFromResponse(r)
+        sig = b64decode(signature)
+        if isVerifyStringWithRsa(message, 'test_public.pem', sig):
+            print "Valid transcript item:"
+            print message
+            print "----------------------"
+    exit()
 # // }}}
 
 
@@ -548,17 +568,6 @@ def getUserModeSelect():
 ################################################################################
 # client application main()
 def main():
-
-    #message_valid = 'the cat in the hat is the best cat'
-    #message_invalid = 'teh cat in the hat is the best cat'
-    ##writeRsaKeysToFile('test')
-    #signature = signStringWithRsa(message_valid, 'test_PRIVATE.pem')
-    #print signature
-    #if isVerifyStringWithRsa(message_valid, 'test_public.pem', signature):
-    #    print 'yay!'
-    #else:
-    #    print 'nay!'
-    #exit()
 
     user_selection = getUserModeSelect()
     print "\n"
