@@ -1,0 +1,149 @@
+mysql -u bitmarks -p
+
+
+CREATE DATABASE bitMarks;
+
+
+use bitMarks;
+
+
+CREATE TABLE `bitMarks`.`tbl_user` (
+  `user_id` BIGINT UNIQUE AUTO_INCREMENT,
+  `user_name` VARCHAR(45) NULL,
+  `user_username` VARCHAR(45) NULL,
+  `user_password` VARCHAR(45) NULL,
+  `user_usertype` VARCHAR(45) NULL,
+  PRIMARY KEY (`user_id`));
+
+
+CREATE USER 'bitmarks'@'localhost' IDENTIFIED BY 'bitmarks_password';
+
+
+GRANT ALL ON bitmarks.* To 'bitmarks'@'localhost';
+
+
+USE `bitMarks`;
+DROP procedure IF EXISTS `bitMarks`.`sp_createUser`;
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_createUser`(
+    IN p_name VARCHAR(20),
+    IN p_username VARCHAR(20),
+    IN p_password VARCHAR(20),
+    IN p_usertype VARCHAR(20)
+)
+BEGIN
+    if ( select exists (select 1 from tbl_user where user_username = p_username) ) THEN
+        select 'Username Exists!';
+    ELSE
+        insert into tbl_user
+        (
+            user_name,
+            user_username,
+            user_password,
+            user_usertype
+        )
+        values
+        (
+            p_name,
+            p_username,
+            p_password,
+            p_usertype
+        );
+    END IF;
+END$$
+DELIMITER ;
+
+
+USE `bitMarks`;
+DROP procedure IF EXISTS `bitMarks`.`sp_validateLogin`;
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_validateLogin`(
+    IN p_username VARCHAR(20)
+)
+BEGIN
+    select * from tbl_user where user_username = p_username;
+END$$
+DELIMITER ;
+
+
+USE <DATABASE NAME>;  SELECT * FROM <TABLE NAME>;
+
+
+CREATE TABLE `bitMarks`.`tbl_learner_addrs` (
+  `addr_id` BIGINT UNIQUE AUTO_INCREMENT,
+  `addr_uuid` varchar(45) DEFAULT NULL,
+  `addr_user_id` BIGINT DEFAULT NULL,
+  PRIMARY KEY (`addr_id`));
+
+
+USE `bitMarks`;
+DROP procedure IF EXISTS `bitMarks`.`sp_addLearner`;
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_addLearner`(
+    IN p_uuid varchar(45),
+    IN p_user_id bigint
+)
+BEGIN
+    insert into tbl_learner_addrs(
+        addr_uuid,
+        addr_user_id
+    )
+    values
+    (
+        p_uuid,
+        p_user_id
+    );
+END$$
+DELIMITER ;
+
+
+USE `bitMarks`;
+DROP procedure IF EXISTS `bitMarks`.`sp_getLearnerAddrByUser`;
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getLearnerAddrByUser` (
+    IN p_user_id bigint
+)
+BEGIN
+    select * from tbl_learner_addrs where addr_user_id = p_user_id;
+END$$
+DELIMITER ;
+
+
+CREATE TABLE `bitMarks`.`tbl_issuer_addrs` (
+  `addr_id` BIGINT UNIQUE AUTO_INCREMENT,
+  `addr_uuid` varchar(45) DEFAULT NULL,
+  `addr_user_id` BIGINT DEFAULT NULL,
+  PRIMARY KEY (`addr_id`));
+
+
+USE `bitMarks`;
+DROP procedure IF EXISTS `bitMarks`.`sp_addIssuer`;
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_addIssuer`(
+    IN p_uuid varchar(45),
+    IN p_user_id bigint
+)
+BEGIN
+    insert into tbl_issuer_addrs(
+        addr_uuid,
+        addr_user_id
+    )
+    values
+    (
+        p_uuid,
+        p_user_id
+    );
+END$$
+DELIMITER ;
+
+
+USE `bitMarks`;
+DROP procedure IF EXISTS `bitMarks`.`sp_getIssuerAddrByUser`;
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getIssuerAddrByUser` (
+    IN p_user_id bigint
+)
+BEGIN
+    select * from tbl_issuer_addrs where addr_user_id = p_user_id;
+END$$
+DELIMITER ;

@@ -1,0 +1,1 @@
+web: composer network deploy -a dist/bitmarks.bna -p hlfv1 -i admin -s adminpw

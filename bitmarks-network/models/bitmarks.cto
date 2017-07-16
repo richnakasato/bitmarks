@@ -26,7 +26,7 @@ participant Learner identified by learnerId {
   o Integer salt
 }
 
-transaction AcademicTransaction identified by transactionId {
+transaction AcademicTransaction {
   o Double quantity
   o String itemJSON
   o String issuerJSON

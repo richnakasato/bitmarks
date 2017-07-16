@@ -16,7 +16,7 @@ right = None
 namespace = "edu.gatech.bitmarks"
 resource = "resource:"+namespace
 #bitmarks_api = "http://localhost:3000/api/"
-bitmarks_api = "http://ec2-34-212-169-28.us-west-2.compute.amazonaws.com:3000/api/"
+bitmarks_api = "http://ec2-54-213-28-177.us-west-2.compute.amazonaws.com:3000/api/"
 not_found = 404
 # // }}}
 
@@ -151,6 +151,18 @@ def getLearnerHashFromRespObj(r):
     learner_string_to_hash = hash_1 + " " + hash_2 + " " + hash_3
     learner_hash = SHA256.new(learner_string_to_hash).hexdigest()
     return learner_hash
+
+
+# generates set of RSA keypairs for testing
+def generateKeyPairs():
+    #legit_college = "universityCollege"
+    #writeRsaKeysToFile(legit_college)
+    #other_legit_college = "collegeUniversity"
+    #writeRsaKeysToFile(other_legit_college)
+    for_profit_university = "internationalInstitute"
+    writeRsaKeysToFile(for_profit_university)
+    #fake_university = "georgeTech"
+    #writeRsaKeysToFile(fake_university)
 # // }}}
 
 
@@ -318,8 +330,6 @@ def getLearnerResponseObj(learner_id):
 # // }}}
 
 
-
-
 ################################################################################
 # HYDRATE PAYLOAD FUNCTIONS // {{{
 ################################################################################
@@ -414,7 +424,7 @@ def issuerMode():
             this_payload = hydrateItemPayload(sid, name, unit, comment,
                                               issuer)
             r = requests.post(item_api, data=this_payload)
-            print "Added new record item!"
+            print "Added new record item, RECORD THIS VALUES: ", sid
 
     # 3) transact...
     elif sel[0] == "t" and found_issuer:
@@ -461,9 +471,12 @@ def issuerMode():
             this_payload_json = json.dumps(this_payload)
             string_to_sign = buildStringToSignFromPayload(this_payload_json)
 
-# TODO - need to be able to set private key file
+            # get keypair private name
+            print "Keypair names have the form 'name'_PRIVATE.pem and 'name'_public.pem..."
+            keypair_name = raw_input("Please enter a keypair 'name' to sign: ")
+            private_keypair_name = keypair_name + "_PRIVATE.pem"
             signature = signStringWithRsa(string_to_sign,
-                                          'test_PRIVATE.pem')
+                                          private_keypair_name)
             this_payload['issuerTxHashSig'] = b64encode(signature)
             payload_json = json.dumps(this_payload)
             r = requests.post(transcript_api, data=this_payload)
@@ -497,8 +510,8 @@ def learnerMode():
 # handles learner mode functions for the client application
 def supportMode():
     # N modes for a support: 1) check , 2) search
-    # 1) chec...
-    # to chec, we need a guid
+    # 1) check...
+    # to check, we need a guid
     #t_id = raw_input("Please enter a valid transaction id: ")
     #t_string = transaction_api+t_id
     #r = requests.get(t_string)
@@ -512,7 +525,11 @@ def supportMode():
     #    print "This transaction has an INVALID signature!"
     #    #exit()
     # 2) search...
-    l_id = raw_input("Please enter a valid learner id: ")
+    l_id = raw_input("Please enter a valid learner address: ")
+    # get keypair public name
+    print "Keypair names have the form 'name'_PRIVATE.pem and 'name'_public.pem..."
+    keypair_name = raw_input("Please enter a keypair 'name' to verify: ")
+    public_keypair_name = keypair_name + "_public.pem"
     l_hash = getLearnerHashFromRespObj(getLearnerResponseObj(l_id))
     r = requests.get(transaction_api)
     complete_transaction_list = json.loads(r.text)
@@ -523,15 +540,18 @@ def supportMode():
     # only print valid transactions
     for transaction in learner_transaction_list:
         t_id = transaction['transactionId']
+        print "Verifying " + str(t_id) + "... "
         t_string = transaction_api+t_id
         r = requests.get(t_string)
         message = buildStringToSignFromResponse(r)
         signature = getStringSignatureFromResponse(r)
         sig = b64decode(signature)
-        if isVerifyStringWithRsa(message, 'test_public.pem', sig):
-            print "Valid transcript item:"
+        if isVerifyStringWithRsa(message, public_keypair_name, sig):
+            print "Valid transcript item(s):\n"
             print message
-            print "----------------------"
+            print "--------------------\n"
+        else:
+            print "INVALID signature!\n"
     exit()
 # // }}}
 
@@ -568,7 +588,6 @@ def getUserModeSelect():
 ################################################################################
 # client application main()
 def main():
-
     user_selection = getUserModeSelect()
     print "\n"
     # execute appropriate subcall
