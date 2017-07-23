@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>bitMarks Learning Record</title>
+
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link href="../static/css/signup.css" rel="stylesheet">
+
+    <script src="../static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script>
+      $(function() {
+        $.ajax({
+          url: '/getIssuerAddrs',
+          type: 'GET',
+          success: function(res) {
+            var addrs = JSON.parse(res);
+            $('#listTemplate').tmpl(addrs).appendTo('#ulist');
+          },
+          error: function(error) {
+            console.log(error);
+          }
+        });
+      });
+
+      function Details(elm) {
+        $.ajax({
+          url: '/getIssuerAddrDetails',
+          data: {
+            address: $(elm).attr('data-addr')
+          },
+          type: 'POST',
+          success: function(res) {
+            var details = JSON.parse(res);
+            $('#showName').val(details['name']);
+            $('#showCountry').val(details['country']);
+            $('#showUrl').val(details['url']);
+            $('#detailModal').modal();
+          },
+          error: function(error) {
+            console.log(error);
+          }
+        });
+      }
+
+      function Course(elm) {
+        $.ajax({
+          url: '/getIssuerAddrCourses',
+          data: {
+            address: $(elm).attr('data-addr')
+          },
+          type: 'POST',
+          success: function(res) {
+            var credentials = JSON.parse(res);
+            var div = document.getElementById('courseModalList');
+            while(div.firstChild) {
+              div.removeChild(div.firstChild)
+            }
+            var para = document.createElement('p');
+            if(credentials.length > 0) {
+              for(var i=0; i<credentials.length; i++) {
+                var id = credentials[i]['id'];
+                var name = credentials[i]['name'];
+                para.appendChild(document.createTextNode(id + ' : ' + name));
+                para.appendChild(document.createElement('br'));
+              }
+            }
+            else {
+              para.appendChild(document.createTextNode('No courses!'));
+            }
+            var pare = document.getElementById('courseModalList');
+            pare.appendChild(para);
+            $('#courseModal').modal();
+            console.log(res);
+          },
+          error: function(error) {
+            console.log(error);
+          }
+        });
+      }
+    </script>
+    <style>
+      .trash {
+        color: rgb(209, 91, 71);
+      }
+      .panel-body .checkbox {
+        display: inline-block;
+        margin: 0px;
+      }
+      .list-group {
+        margin-bottom: 0px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" class="active"><a href="#">Home</a></li>
+            <li role="presentation"><a href="/showAddIssuer">Add Address</a></li>
+            <li role="presentation"><a href="/showAddItem">Add Item</a></li>
+            <li role="presentation"><a href="/showAddTransaction">Add Transaction</a></li>
+            <li role="presentation"><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">bitMarks Blockchain</h3>
+      </div>
+
+      <div class="jumbotron">
+        <h1>Issuer Addresses</h1>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="panel-body">
+              <ul id="ulist" class="list-group">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script id="listTemplate" type="text/x-jquery-tmpl">
+        <li class="list-group-item">
+          <div class="checkbox">
+            <label>${Address}</label>
+          </div>
+          <div class="pull-right action-buttons">
+            <a data-addr=${Address} onclick="Details(this)"><span class="glyphicon glyphicon-info-sign"></span></a>
+            <a data-addr=${Address} onclick="Course(this)"><span class="glyphicon glyphicon-book"></span></a>
+          </div>
+        </li>
+      </script>
+
+      <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true" data-backdrop="false">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title" id="detailModalLabel">Address Details</h4>
+            </div>
+            <div class="modal-body">
+              <form role="form">
+                <div class="form-group">
+                  <label for="recipient-name" class="control-label">Name:</label>
+                  <input type="text" class="form-control" id="showName" disabled>
+                </div>
+                <div class="form-group">
+                  <label for="recipient-country" class="control-label">Country:</label>
+                  <input type="text" class="form-control" id="showCountry" disabled>
+                </div>
+                <div class="form-group">
+                  <label for="recipient-url" class="control-label">URL:</label>
+                  <input type="text" class="form-control" id="showUrl" disabled>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="courseModal" tabindex="-1" role="dialog" aria-labelledby="courseModalLabel" aria-hidden="true" data-backdrop="false">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title" id="courseModalLabel">Address Credentials</h4>
+            </div>
+            <div class="modal-body" id="courseModalList">
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script id="courseTemplate" type="text/x-jquery-tmpl">
+        <li class="list-group-item">${Credential}</li>
+      </script>
+
+      <div class="row instructions">
+        <div class="col-lg-6">
+          <h3>Instructions</h3>
+          <p>This page contains all your issuer addresses.  Click on the 'i' next to each address to see the details regarding that issuer address.  Click on the 'notebook' next to each address to see the items (credentials) that are associated with that learner address.  You can always add a new issuer address, item (credential) for an issuer address, or record a transaction on the bitMarks block chain by clicking the appropriate buttons in the navigation bar at the top of the page.</p>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>&copy; EdTech 2017</p>
+      </footer>
+    </div>
+  </body>
+</html>

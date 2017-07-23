@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>bitMarks Learning Record</title>
+
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link href="../static/css/signup.css" rel="stylesheet">
+
+    <script src="../static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script>
+      $(function() {
+        $.ajax({
+          url: '/getLearnerAddrs',
+          type: 'GET',
+          success: function(res) {
+            var addrs = JSON.parse(res);
+            $('#listTemplate').tmpl(addrs).appendTo('#ulist');
+          },
+          error: function(error) {
+            console.log(error);
+          }
+        });
+      });
+
+      function Details(elm) {
+        $.ajax({
+          url: '/getLearnerAddrDetails',
+          data: {
+            address: $(elm).attr('data-addr')
+          },
+          type: 'POST',
+          success: function(res) {
+            var details = JSON.parse(res);
+            $('#showFirstName').val(details['firstName']);
+            $('#showLastName').val(details['lastName']);
+            $('#showSaltValue').val(details['salt']);
+            $('#detailModal').modal();
+          },
+          error: function(error) {
+            console.log(error);
+          }
+        });
+      }
+    </script>
+    <style>
+      .trash {
+        color: rgb(209, 91, 71);
+      }
+      .panel-body .checkbox {
+        display: inline-block;
+        margin: 0px;
+      }
+      .list-group {
+        margin-bottom: 0px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" class="active"><a href="#">Home</a></li>
+            <li role="presentation"><a href="/showAddLearner">Add Address</a></li>
+            <li role="presentation"><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">bitMarks Blockchain</h3>
+      </div>
+
+      <div class="jumbotron">
+        <h1>Learner Addresses</h1>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="panel-body">
+              <ul id="ulist" class="list-group">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script id="listTemplate" type="text/x-jquery-tmpl">
+        <li class="list-group-item">
+          <div class="checkbox">
+            <label>${Address}</label>
+          </div>
+          <div class="pull-right action-buttons">
+            <a data-addr=${Address} onclick="Details(this)"><span class="glyphicon glyphicon-info-sign"></span></a>
+          </div>
+        </li>
+      </script>
+
+      <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true" data-backdrop="false">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title" id="detailModalLabel">Address Details</h4>
+            </div>
+            <div class="modal-body">
+              <form role="form">
+                <div class="form-group">
+                  <label for="recipient-first-name" class="control-label">First Name:</label>
+                  <input type="text" class="form-control" id="showFirstName" disabled>
+                </div>
+                <div class="form-group">
+                  <label for="recipient-last-name" class="control-label">Last Name:</label>
+                  <input type="text" class="form-control" id="showLastName" disabled>
+                </div>
+                <div class="form-group">
+                  <label for="recipient-salt-value" class="control-label">Salt Value:</label>
+                  <input type="text" class="form-control" id="showSaltValue" disabled>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row instructions">
+        <div class="col-lg-6">
+          <h3>Instructions</h3>
+          <p>This page contains all your learning addresses.  Click on the 'i' next to each address to see the details regarding that learner address.  You can always add a new learner address by clicking 'Add Address' in the navigation bar at the top of the page.</p>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>&copy; EdTech 2017</p>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,12 +1,14 @@
-mysql -u bitmarks -p
+https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-16-04
+http://www.mysqltutorial.org/getting-started-with-mysql-stored-procedures.aspx
+
+
+mysql -u root -p
 
 
 CREATE DATABASE bitMarks;
 
 
-use bitMarks;
-
-
+USE `bitMarks`;
 CREATE TABLE `bitMarks`.`tbl_user` (
   `user_id` BIGINT UNIQUE AUTO_INCREMENT,
   `user_name` VARCHAR(45) NULL,
@@ -19,13 +21,19 @@ CREATE TABLE `bitMarks`.`tbl_user` (
 CREATE USER 'bitmarks'@'localhost' IDENTIFIED BY 'bitmarks_password';
 
 
-GRANT ALL ON bitmarks.* To 'bitmarks'@'localhost';
+GRANT ALL ON bitMarks.* To 'bitmarks'@'localhost';
+
+
+exit;
+
+
+mysql -u bitmarks -p
 
 
 USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_createUser`;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_createUser`(
+CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_createUser`(
     IN p_name VARCHAR(20),
     IN p_username VARCHAR(20),
     IN p_password VARCHAR(20),
@@ -57,7 +65,7 @@ DELIMITER ;
 USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_validateLogin`;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_validateLogin`(
+CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_validateLogin`(
     IN p_username VARCHAR(20)
 )
 BEGIN
@@ -79,7 +87,7 @@ CREATE TABLE `bitMarks`.`tbl_learner_addrs` (
 USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_addLearner`;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_addLearner`(
+CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_addLearner`(
     IN p_uuid varchar(45),
     IN p_user_id bigint
 )
@@ -100,7 +108,7 @@ DELIMITER ;
 USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_getLearnerAddrByUser`;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getLearnerAddrByUser` (
+CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_getLearnerAddrByUser` (
     IN p_user_id bigint
 )
 BEGIN
@@ -119,7 +127,7 @@ CREATE TABLE `bitMarks`.`tbl_issuer_addrs` (
 USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_addIssuer`;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_addIssuer`(
+CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_addIssuer`(
     IN p_uuid varchar(45),
     IN p_user_id bigint
 )
@@ -140,7 +148,7 @@ DELIMITER ;
 USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_getIssuerAddrByUser`;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getIssuerAddrByUser` (
+CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_getIssuerAddrByUser` (
     IN p_user_id bigint
 )
 BEGIN

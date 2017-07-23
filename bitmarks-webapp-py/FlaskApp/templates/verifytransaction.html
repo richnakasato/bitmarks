@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>bitMarks Learning Record</title>
+
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link href="../static/css/signup.css" rel="stylesheet">
+
+    <script language="JavaScript" type="text/javascript" src="https://kjur.github.io/jsrsasign/jsrsasign-all-min.js"></script>
+    <script language="JavaScript" type="text/javascript">
+    function doVerify() {
+      document.form1.inputVerifiedTransactions.value = '';
+      var tx_json = '{{tx|tojson}}';
+      var tx_list = JSON.parse(tx_json);
+      var public_key = document.form1.inputPublicKey.value;
+      var pk = KEYUTIL.getKey(public_key)
+      var valid_count = 0;
+      var invalid_count = 0;
+      for(var iii=0; iii<tx_list.length; iii++) {
+        var signature = tx_list[iii]['issuerTxHashSig'];
+        var message = tx_list[iii]['$class'] + ' ' +
+                      tx_list[iii]['quantity'] + ' ' +
+                      tx_list[iii]['itemJSON'] + ' ' +
+                      tx_list[iii]['issuerJSON'] + ' ' +
+                      tx_list[iii]['learnerHash'];
+        var isValid = pk.verify(message, signature);
+        if(isValid) {
+          document.form1.inputVerifiedTransactions.value = document.form1.inputVerifiedTransactions.value + message + ' is VALID!\n';
+          valid_count++;
+        }
+        else {
+          invalid_count++;
+        }
+      }
+      document.form1.inputVerifiedTransactions.value = document.form1.inputVerifiedTransactions.value + '-----\n';
+      document.form1.inputVerifiedTransactions.value = document.form1.inputVerifiedTransactions.value + 'learner: ' + '{{ln}}' + ', valid transactions: ' + valid_count + ', invalid transactions: ' + invalid_count;
+    }
+    </script>
+    <script src="../static/js/jquery-3.2.1.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation"><a href="supportHome">Home</a></li>
+            <li role="presentation" class="active"><a href="showViewLearner">View Learner</a></li>
+            <li role="presentation"><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">bitMarks Blockchain</h3>
+      </div>
+
+      <section>
+        <form name="form1" class="form-horizontal" method="post" action="/verifyTransaction">
+          <fieldset>
+            <!-- Form Name -->
+            <legend>Verify Transactions</legend>
+
+            <!-- Text input -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Unverified Transactions</label>
+              <div class="col-md-4">
+                <textarea id="txtUnverifiedTransactions" name="inputUnverifiedTransactions" rows="5" class="form-control input-md" disabled>{{tx}}</textarea>
+              </div>
+            </div>
+
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Public Key</label>
+              <div class="col-md-4">
+                <textarea id="txtPublic" name="inputPublicKey" rows="5" placeholder="PUBLIC KEY HERE" class="form-control input-md"></textarea>
+              </div>
+            </div>
+
+            <!-- Text input -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Verified Transactions</label>
+              <div class="col-md-4">
+                <textarea id="txtVerifiedTransactions" name="inputVerifiedTransactions" rows="5" class="form-control input-md" disabled></textarea>
+              </div>
+            </div>
+
+            <!-- Button -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="singlebutton"></label>
+              <div class="col-md-4">
+                <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="button" onclick="doVerify();" value="Verify" />
+              </div>
+            </div>
+
+          </fieldset>
+        </form>
+      </section>
+
+      <footer class="footer">
+        <p>&copy; EdTech 2017</p>
+      </footer>
+    </div>
+  </body>
+</html>

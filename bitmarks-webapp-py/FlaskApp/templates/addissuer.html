@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>bitMarks Learning Record</title>
+
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link href="../static/css/signup.css" rel="stylesheet">
+
+    <script src="../static/js/jquery-3.2.1.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation"><a href="/issuerHome">Home</a></li>
+            <li role="presentation" class="active"><a href="#">Add Address</a></li>
+            <li role="presentation"><a href="/showAddItem">Add Item</a></li>
+            <li role="presentation"><a href="/showAddTransaction">Add Transaction</a></li>
+            <li role="presentation"><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">bitMarks Blockchain</h3>
+      </div>
+
+      <section>
+        <form class="form-horizontal" method="post" action="/addIssuer">
+          <fieldset>
+            <!-- Form Name -->
+            <legend>Create a New Issuer Address</legend>
+
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Issuer Name</label>
+              <div class="col-md-4">
+                <input id="txtIssuerName" name="inputIssuerName" type="text" placeholder="University College" class="form-control input-md">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Issuer Country</label>
+              <div class="col-md-4">
+                <input id="txtIssuerCountry" name="inputIssuerCountry" type="text" placeholder="USA" class="form-control input-md">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">URL</label>
+              <div class="col-md-4">
+                <input id="txtIssuerUrl" name="inputIssuerUrl" type="text" placeholder="www.university-college.edu" class="form-control input-md">
+              </div>
+            </div>
+
+            <!-- Button -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="singlebutton"></label>
+              <div class="col-md-4">
+                <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Create" />
+              </div>
+            </div>
+
+          </fieldset>
+        </form>
+      </section>
+
+      <footer class="footer">
+        <p>&copy; EdTech 2017</p>
+      </footer>
+    </div>
+  </body>
+</html>

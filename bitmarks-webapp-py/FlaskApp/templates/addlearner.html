@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>bitMarks Learning Record</title>
+
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link href="../static/css/signup.css" rel="stylesheet">
+
+    <script src="../static/js/jquery-3.2.1.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation"><a href="/learnerHome">Home</a></li>
+            <li role="presentation" class="active"><a href="#">Add Address</a></li>
+            <li role="presentation"><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">bitMarks Blockchain</h3>
+      </div>
+
+      <section>
+        <form class="form-horizontal" method="post" action="/addLearner">
+          <fieldset>
+            <!-- Form Name -->
+            <legend>Create a New Learner Address</legend>
+
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">First Name</label>
+              <div class="col-md-4">
+                <input id="txtFirstName" name="inputFirstName" type="text" placeholder="Jane" class="form-control input-md">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Last Name</label>
+              <div class="col-md-4">
+                <input id="txtLastName" name="inputLastName" type="text" placeholder="Smith" class="form-control input-md">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Salt Value</label>
+              <div class="col-md-4">
+                <input id="txtSaltValue" name="inputSaltValue" type="text" placeholder="0192" class="form-control input-md">
+              </div>
+            </div>
+
+            <!-- Button -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="singlebutton"></label>
+              <div class="col-md-4">
+                <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Create" />
+              </div>
+            </div>
+
+          </fieldset>
+        </form>
+      </section>
+
+      <footer class="footer">
+        <p>&copy; EdTech 2017</p>
+      </footer>
+    </div>
+  </body>
+</html>

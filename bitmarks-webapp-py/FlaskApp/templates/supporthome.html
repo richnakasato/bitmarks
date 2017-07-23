@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>bitMarks Learning Record</title>
+
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link href="../static/css/signup.css" rel="stylesheet">
+
+    <script language="JavaScript" type="text/javascript" src="https://kjur.github.io/jsrsasign/jsrsasign-all-min.js"></script>
+    <script language="JavaScript" type="text/javascript">
+    function doHash() {
+      document.form1.inputLearnerHashOut.value = '';
+      var learner_info = document.form1.inputLearnerHashIn.value;
+      var learner_hash = KJUR.crypto.Util.sha256(learner_info);
+      document.form1.inputLearnerHashOut.value = learner_hash;
+    }
+    </script>
+    <script src="../static/js/jquery-3.2.1.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" class="active"><a href="#">Home</a></li>
+            <li role="presentation"><a href="/showViewLearner">View Learner</a></li>
+            <li role="presentation"><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">bitMarks Blockchain</h3>
+      </div>
+
+      <div class="jumbotron">
+        <h1>The Ledger</h1>
+
+        <section>
+          <form name="form1" class="form-horizontal" method="post" action="/verifyTransaction">
+            <fieldset>
+              <!-- Form Name
+              <legend>Transactions</legend>-->
+
+              <!-- Text input -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="txtTitle">Unverified Transactions</label>
+                <div class="col-md-4">
+                  <textarea id="txtUnverifiedTransactions" name="inputUnverifiedTransactions" rows="5" class="form-control input-md" disabled>{{utx}}</textarea>
+                </div>
+              </div>
+
+              <!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="txtTitle">Learner Info</label>
+                <div class="col-md-4">
+                  <input id="txtLearnerHashIn" name="inputLearnerHashIn" type="text" placeholder="Bob Jenkins 1234" class="form-control input-md">
+                </div>
+              </div>
+
+              <!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="txtTitle">Hash Output</label>
+                <div class="col-md-4">
+                  <input id="txtLearnerHashOut" name="inputLearnerHashOut" type="text" placeholder="914b27d44879090ab84e89d61323dd8eafc6c8458ceeb73c486b4794b7555691" class="form-control input-md" disabled>
+                </div>
+              </div>
+
+              <!-- Button -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="singlebutton"></label>
+                <div class="col-md-4">
+                  <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="button" onclick="doHash();" value="Calculate Hash" />
+                </div>
+              </div>
+
+            </fieldset>
+          </form>
+        </section>
+
+      </div>
+
+      <div class="row instructions">
+        <div class="col-lg-6">
+          <h3>Instructions</h3>
+          <p>Support accounts can view and verify transactions on the bitMarks block chain for a given learner address.  Get started by clicking 'View Learner' in the navigation bar at the top of the page.  If you don't have access to the learner address right now, you can input the learner info used to create the address, calculate the hash, and find all transactions on the ledger for that learner.  You'll need a learner address and public key before you can verify credentials though!</p>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>&copy; EdTech 2017</p>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>bitMarks Learning Record</title>
+
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link href="../static/css/signup.css" rel="stylesheet">
+
+    <script language="JavaScript" type="text/javascript" src="https://kjur.github.io/jsrsasign/jsrsasign-all-min.js"></script>
+    <script language="JavaScript" type="text/javascript">
+    function doSign() {
+      var rsa = new RSAKey();
+      rsa.readPrivateKeyFromPEMString(document.form1.inputPrivateKey.value);
+      var hashAlg = "sha256";
+      var hSig = rsa.sign(document.form1.inputSignTransaction.value, hashAlg);
+      document.form1.inputSignedTransaction.value = hSig;
+      document.form1.inputPrivateKey.value = "";
+    }
+    </script>
+    <script src="../static/js/jquery-3.2.1.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation"><a href="/issuerHome">Home</a></li>
+            <li role="presentation"><a href="/showAddIssuer">Add Address</a></li>
+            <li role="presentation"><a href="/showAddItem">Add Item</a></li>
+            <li role="presentation" class="active"><a href="#">Add Transaction</a></li>
+            <li role="presentation"><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">bitMarks Blockchain</h3>
+      </div>
+
+      <section>
+        <form name="form1" class="form-horizontal" method="post" action="/signTransaction">
+          <fieldset>
+            <!-- Form Name -->
+            <legend>Create a New Transaction - Sign Transaction</legend>
+
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Transaction</label>
+              <div class="col-md-4">
+                <textarea id="txtSignTransaction" name="inputSignTransaction" rows="5" class="form-control input-md" disabled>{{sts}}</textarea>
+              </div>
+            </div>
+
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Private Key</label>
+              <div class="col-md-4">
+                <textarea id="txtPrivateKey" name="inputPrivateKey" rows="5" placeholder="PRIVATE KEY HERE" class="form-control input-md"></textarea>
+              </div>
+            </div>
+
+            <!-- Button -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="singlebutton"></label>
+              <div class="col-md-4">
+                <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="button" onClick="doSign();" value="Sign & Clear" />
+              </div>
+            </div>
+
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="txtTitle">Signature</label>
+              <div class="col-md-4">
+                <textarea id="txtPrivateKey" name="inputSignedTransaction" rows="5" placeholder="PRIVATE KEY HERE" class="form-control input-md"></textarea>
+              </div>
+            </div>
+
+            <!-- Button -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="singlebutton"></label>
+              <div class="col-md-4">
+                <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Submit" />
+              </div>
+            </div>
+
+          </fieldset>
+        </form>
+      </section>
+
+      <footer class="footer">
+        <p>&copy; EdTech 2017</p>
+      </footer>
+    </div>
+  </body>
+</html>
