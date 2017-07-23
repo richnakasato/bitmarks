@@ -12,7 +12,7 @@ from Crypto.Signature import PKCS1_v1_5
 from datetime import datetime
 
 # web app includes
-from flask import Flask, render_template, json, request, redirect, session
+from flask import Flask, render_template, json, request, redirect, session, url_for
 from flaskext.mysql import MySQL
 
 # bitmarks api {{{

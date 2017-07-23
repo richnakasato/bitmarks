@@ -1,0 +1,14 @@
+cd ~/fabric-tools
+./startFabric.sh
+./createComposerProfile.sh
+
+
+cd ~/fabric-tools
+./stopFabric.sh
+./teardownFabric.sh
+
+cd ~/git/bitmarks/bitmarks-network/
+composer network deploy -a dist/bitmarks-network.bna -p hlfv1 -i PeerAdmin -s randomString
+
+
+composer-rest-server -p hlfv1 -n bitmarks-network -i admin -s adminpw -N never

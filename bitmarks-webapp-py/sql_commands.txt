@@ -1,5 +1,6 @@
 https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-16-04
 http://www.mysqltutorial.org/getting-started-with-mysql-stored-procedures.aspx
+USE <DATABASE NAME>;  SELECT * FROM <TABLE NAME>;
 
 
 mysql -u root -p
@@ -9,12 +10,13 @@ CREATE DATABASE bitMarks;
 
 
 USE `bitMarks`;
+DROP TABLE IF EXISTS `bitMarks`.`tbl_user`;
 CREATE TABLE `bitMarks`.`tbl_user` (
   `user_id` BIGINT UNIQUE AUTO_INCREMENT,
-  `user_name` VARCHAR(45) NULL,
-  `user_username` VARCHAR(45) NULL,
-  `user_password` VARCHAR(45) NULL,
-  `user_usertype` VARCHAR(45) NULL,
+  `user_name` VARCHAR(64) NULL,
+  `user_username` VARCHAR(64) NULL,
+  `user_password` VARCHAR(64) NULL,
+  `user_usertype` VARCHAR(64) NULL,
   PRIMARY KEY (`user_id`));
 
 
@@ -34,10 +36,10 @@ USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_createUser`;
 DELIMITER $$
 CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_createUser`(
-    IN p_name VARCHAR(20),
-    IN p_username VARCHAR(20),
-    IN p_password VARCHAR(20),
-    IN p_usertype VARCHAR(20)
+    IN p_name VARCHAR(64),
+    IN p_username VARCHAR(64),
+    IN p_password VARCHAR(64),
+    IN p_usertype VARCHAR(64)
 )
 BEGIN
     if ( select exists (select 1 from tbl_user where user_username = p_username) ) THEN
@@ -66,7 +68,7 @@ USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_validateLogin`;
 DELIMITER $$
 CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_validateLogin`(
-    IN p_username VARCHAR(20)
+    IN p_username VARCHAR(64)
 )
 BEGIN
     select * from tbl_user where user_username = p_username;
@@ -74,12 +76,11 @@ END$$
 DELIMITER ;
 
 
-USE <DATABASE NAME>;  SELECT * FROM <TABLE NAME>;
-
-
+USE `bitMarks`;
+DROP TABLE IF EXISTS `bitMarks`.`tbl_learner_addrs`;
 CREATE TABLE `bitMarks`.`tbl_learner_addrs` (
   `addr_id` BIGINT UNIQUE AUTO_INCREMENT,
-  `addr_uuid` varchar(45) DEFAULT NULL,
+  `addr_uuid` varchar(64) DEFAULT NULL,
   `addr_user_id` BIGINT DEFAULT NULL,
   PRIMARY KEY (`addr_id`));
 
@@ -88,7 +89,7 @@ USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_addLearner`;
 DELIMITER $$
 CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_addLearner`(
-    IN p_uuid varchar(45),
+    IN p_uuid varchar(64),
     IN p_user_id bigint
 )
 BEGIN
@@ -117,9 +118,11 @@ END$$
 DELIMITER ;
 
 
+USE `bitMarks`;
+DROP TABLE IF EXISTS `bitMarks`.`tbl_issuer_addrs`;
 CREATE TABLE `bitMarks`.`tbl_issuer_addrs` (
   `addr_id` BIGINT UNIQUE AUTO_INCREMENT,
-  `addr_uuid` varchar(45) DEFAULT NULL,
+  `addr_uuid` varchar(64) DEFAULT NULL,
   `addr_user_id` BIGINT DEFAULT NULL,
   PRIMARY KEY (`addr_id`));
 
@@ -128,7 +131,7 @@ USE `bitMarks`;
 DROP procedure IF EXISTS `bitMarks`.`sp_addIssuer`;
 DELIMITER $$
 CREATE DEFINER=`bitmarks`@`localhost` PROCEDURE `sp_addIssuer`(
-    IN p_uuid varchar(45),
+    IN p_uuid varchar(64),
     IN p_user_id bigint
 )
 BEGIN
@@ -155,3 +158,5 @@ BEGIN
     select * from tbl_issuer_addrs where addr_user_id = p_user_id;
 END$$
 DELIMITER ;
+
+
