@@ -1,3 +1,5 @@
+# all code heavily derived from:
+# https://code.tutsplus.com/series/creating-a-web-app-from-scratch-using-python-flask-and-mysql--cms-827
 import sys
 import uuid
 import random
@@ -155,6 +157,8 @@ def fixItem(u, n, i, c):
 def fixTransaction(q):
   if not q or not isFloat(q):
     q = "0";
+  else:
+    q = q.rstrip('.0')
   return q
 
 

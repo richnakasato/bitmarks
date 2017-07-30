@@ -7,8 +7,16 @@ cd ~/fabric-tools
 ./stopFabric.sh
 ./teardownFabric.sh
 
+
 cd ~/git/bitmarks/bitmarks-network/
 composer network deploy -a dist/bitmarks-network.bna -p hlfv1 -i PeerAdmin -s randomString
 
 
+cd ~/git/bitmarks/bitmarks-network/
 composer-rest-server -p hlfv1 -n bitmarks-network -i admin -s adminpw -N never
+
+
+cd ~/git/bitmarks/bitmarks-webapp-py/FlaskApp
+reset; clear; python app.py
+
+

@@ -160,3 +160,14 @@ END$$
 DELIMITER ;
 
 
+TRUNCATE TABLE tbl_user;
+TRUNCATE TABLE tbl_issuer_addrs;
+TRUNCATE TABLE tbl_learner_addrs;
+
+
+SELECT * FROM tbl_user;
+SELECT * FROM tbl_issuer_addrs;
+SELECT * FROM tbl_learner_addrs;
+
+
+
