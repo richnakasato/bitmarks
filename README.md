@@ -1,2 +1,2 @@
 # bitmarks
-bitmarks hyperledger blockchain project for Education Technology 6460
+Bitmarks hyperledger blockchain project for Education Technology 6460
